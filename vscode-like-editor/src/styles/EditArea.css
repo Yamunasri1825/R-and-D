@@ -1,0 +1,98 @@
+.editor-area {
+  flex: 1;
+  background-color: #1e1e1e;
+  color: white;
+  padding: 20px;
+}
+
+.file-explorer {
+  background-color: #252526;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.file-explorer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #333;
+  border-bottom: 1px solid #444;
+}
+
+.file-explorer-title {
+  font-weight: bold;
+}
+
+.file-explorer-toolbar {
+  display: flex;
+  gap: 10px;
+}
+
+.toolbar-icon {
+  cursor: pointer;
+  color: white;
+}
+
+.file-input {
+  display: flex;
+  padding: 10px;
+}
+
+.file-input input {
+  flex: 1;
+  padding: 5px;
+  margin-right: 5px;
+  border: none;
+  border-radius: 3px;
+}
+
+.file-input button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 3px;
+  background-color: #007acc;
+  color: white;
+  cursor: pointer;
+}
+
+.file-explorer-content {
+  padding: 10px;
+}
+
+.file-explorer-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.file-explorer-content li {
+  padding: 5px 0;
+  cursor: pointer;
+}
+
+.code-editor {
+  background-color: #252526;
+  border-radius: 5px;
+  padding: 10px;
+  height: 100%;
+}
+
+.code-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #333;
+  border-bottom: 1px solid #444;
+}
+
+.code-editor-textarea {
+  width: 100%;
+  height: calc(100% - 40px); /* Adjust height based on header */
+  background-color: #1e1e1e;
+  color: white;
+  border: none;
+  padding: 10px;
+  resize: none;
+  font-family: monospace;
+}

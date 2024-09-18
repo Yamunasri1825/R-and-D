@@ -1,0 +1,54 @@
+.terminal-container {
+  display: flex;
+  flex-direction: column;
+  height: 200px;
+  background-color: #1e1e1e;
+  color: white;
+  font-family: monospace;
+}
+
+.terminal-tabs {
+  display: flex;
+  background-color: #333;
+  border-bottom: 1px solid #444;
+}
+
+.terminal-tab {
+  padding: 10px;
+  cursor: pointer;
+  color: #ccc;
+}
+
+.terminal-tab.active {
+  color: white;
+  border-bottom: 2px solid orange;
+}
+
+.terminal-content {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.terminal-output {
+  white-space: pre-wrap;
+}
+
+.terminal-line {
+  display: flex;
+  align-items: center;
+}
+
+.terminal-time {
+  color: #888;
+  margin-right: 5px;
+}
+
+.terminal-info {
+  color: #00ff00;
+  margin-right: 5px;
+}
+
+.terminal-placeholder {
+  color: #888;
+}

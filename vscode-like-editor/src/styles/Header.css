@@ -1,0 +1,20 @@
+.header {
+  background-color: #333;
+  color: white;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 16px;
+}
+
+.header-search {
+  background-color: #1e1e1e;
+  border: none;
+  color: white;
+  padding: 5px;
+  border-radius: 3px;
+}
