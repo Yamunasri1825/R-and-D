@@ -1,16 +1,33 @@
 .sidebar {
-  width: 50px;
-  background-color: #252526;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 10px;
+  width: 250px;
+  background-color: #ececf1;
+  color: #cccccc;
+  padding: 10px;
 }
 
-.icon {
-  width: 24px;
-  height: 24px;
-  margin-bottom: 20px;
+.folder-item, .file-item {
+  display: flex;
+  align-items: center;
+  padding: 5px 0;
+}
+
+.folder-item {
+  justify-content: space-between;
+}
+
+.folder-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.folder-actions svg {
   cursor: pointer;
-  color: white;
+}
+
+.folder-item span {
+  cursor: pointer;
+}
+
+.file-item {
+  padding-left: 20px;
 }

@@ -1,0 +1,31 @@
+.icons {
+    height: 100vh;
+    width: 60px;
+    background-color: #2e2e2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+  }
+  
+  .icons ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .icons li {
+    margin: 20px 0;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.3s;
+  }
+  
+  .icons li:hover {
+    transform: scale(1.1);
+  }
+  
+  .icons li:active {
+    transform: scale(0.9);
+  }
+  

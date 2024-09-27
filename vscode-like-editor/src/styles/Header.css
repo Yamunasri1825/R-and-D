@@ -1,20 +1,71 @@
 .header {
-  background-color: #333;
-  color: white;
-  padding: 10px;
+  height: 50px;
+  background-color: #282c34;
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  padding: 0 20px;
+  color: white;
+}
+
+.header-left, .header-right {
+  display: flex;
   align-items: center;
 }
 
-.header-title {
-  font-size: 16px;
+.header-menu-item {
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+.file-dropdown {
+  position: absolute;
+  background-color: #333;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  top: 40px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.file-dropdown div {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.file-dropdown div:hover {
+  background-color: #444;
 }
 
 .header-search {
-  background-color: #1e1e1e;
-  border: none;
-  color: white;
   padding: 5px;
-  border-radius: 3px;
+  margin-right: 5px;
+}
+
+.header-icon {
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.content {
+  padding: 20px;
+  flex: 1;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Simulate full-screen maximized window */
+.content.maximized {
+  width: 100%;
+  height: calc(100vh - 50px); /* Subtract the header height */
+  position: fixed;
+  top: 50px;
+  left: 0;
+  background-color: white;
+  z-index: 999;
+}
+
+/* Simulate minimized window by hiding content */
+.content.minimized {
+  display: none;
 }
