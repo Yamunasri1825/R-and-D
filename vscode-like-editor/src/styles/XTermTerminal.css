@@ -1,0 +1,54 @@
+.terminal-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.terminal-tabs {
+  display: flex;
+  background-color: #252526;
+  padding: 5px 5px 0;
+  overflow-x: auto;
+}
+
+.terminal-tab {
+  display: flex;
+  align-items: center;
+  background-color: #2d2d2d;
+  color: #cccccc;
+  border: none;
+  padding: 5px 10px;
+  margin-right: 2px;
+  cursor: pointer;
+}
+
+.terminal-tab.active {
+  background-color: #1e1e1e;
+}
+
+.terminal-tab button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.close-tab {
+  margin-left: 5px;
+  font-size: 16px;
+}
+
+.new-terminal-btn {
+  background-color: #2d2d2d;
+  color: #cccccc;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.terminal-container {
+  flex-grow: 1;
+  background-color: #1e1e1e;
+  overflow: hidden;
+}

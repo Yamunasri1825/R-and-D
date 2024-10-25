@@ -37,6 +37,31 @@ async function executeCode(code, language_id) {
     }
     throw new Error('Unsupported language ID');
 }
+// New endpoint to execute notebook
+app.post('/execute-notebook', async (req, res) => {
+    try {
+        const { notebook } = req.body;
+
+        console.log('Received notebook:', notebook);
+        
+        // Replace this section with your actual notebook execution logic
+        const output = await executeNotebook(notebook);
+
+        // Send the output back to the client
+        res.status(200).json({ output });
+    } catch (err) {
+        // Log the error
+        console.error('Error occurred:', JSON.stringify(err, null, 2));
+        // Send an error response
+        res.status(500).json({ message: 'Internal Server Error', error: err.message });
+    }
+});
+
+// Mock function to simulate notebook execution
+async function executeNotebook(notebook) {
+    // Simulating successful execution; replace this with actual logic
+    return `Notebook execution output: ${JSON.stringify(notebook).slice(0, 100)}...`;
+}
 
 // Start the server
 app.listen(5001, () => {

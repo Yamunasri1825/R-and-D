@@ -31,3 +31,21 @@
 .file-item {
   padding-left: 20px;
 }
+
+.sidebar-container {
+  width: 250px;
+  background-color: #040405;
+  color: #cccccc;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.sidebar, .github-repo {
+  padding: 10px;
+}
+
+/* Styles for GitHubRepo component when it's shown */
+.github-repo {
+  padding: 10px;
+  border-top: 1px solid #cccccc;
+}

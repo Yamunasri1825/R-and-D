@@ -10,14 +10,22 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@jupyterlab/services": "^7.2.5",
     "@monaco-editor/react": "^4.6.0",
+    "@nteract/commutable": "^7.5.1",
     "@types/lodash": "^4.17.9",
     "axios": "^1.7.7",
     "lodash": "^4.17.21",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.3.0",
-    "vscode-like-editor": "file:"
+    "react-markdown": "^9.0.1",
+    "remark-gfm": "^4.0.0",
+    "socket.io-client": "^4.8.0",
+    "vscode-like-editor": "file:",
+    "xterm": "^5.3.0",
+    "xterm-addon-fit": "^0.8.0",
+    "xterm-addon-unicode11": "^0.6.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
