@@ -3,6 +3,8 @@ import { Editor } from '@monaco-editor/react';
 import axios from 'axios';
 import { File } from './types'; // Make sure to import the File type
 import { parse as parseNotebook } from '@nteract/commutable';
+// Import an icon library, e.g., React Icons
+import { FaPlay } from 'react-icons/fa';
 
 interface CodeEditorProps {
   code: string;
@@ -16,6 +18,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, fileName, onUpdateCode, a
   const [output, setOutput] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [userInput, setUserInput] = useState<string>('');
+  const [waitingForInput, setWaitingForInput] = useState<boolean>(false);
+  const userInputRef = useRef<HTMLInputElement>(null);
+  const [inputBuffer, setInputBuffer] = useState<string>('');
+  const outputRef = useRef<HTMLPreElement>(null);
 
   useEffect(() => {
     if (fileName.endsWith('.ipynb')) {
@@ -38,6 +45,12 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, fileName, onUpdateCode, a
     }
   }, [code, language]);
 
+  useEffect(() => {
+    if (waitingForInput) {
+      outputRef.current?.focus();
+    }
+  }, [waitingForInput]);
+
   const determineLanguage = (fileName: string) => {
     const extension = fileName.split('.').pop()?.toLowerCase();
     const languageMap: { [key: string]: string } = {
@@ -46,7 +59,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, fileName, onUpdateCode, a
       'java': 'java',
       'cpp': 'cpp',
       'html': 'html',
-      'ipynb': 'json', // Change this to 'json' for .ipynb files
+      'ipynb': 'json',
     };
     setLanguage(languageMap[extension || ''] || '');
   };
@@ -93,39 +106,31 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, fileName, onUpdateCode, a
     return languageIds[lang] || 63; // Default to JavaScript
   };
   
-  const handleRunCode = async () => {
-    if (fileName.endsWith('.ipynb')) {
-      setIsRunning(true);
-      setOutput('Running notebook...');
-      try {
-        const response = await axios.post('http://localhost:5001/execute-notebook', {
-          notebook: code,
-        });
-        setOutput(response.data.output);
-      } catch (error) {
-        setOutput(`Error: ${error.message || 'An unknown error occurred.'}`);
-      } finally {
-        setIsRunning(false);
-      }
-      return;
+  const handleExecutionResponse = async (data: any) => {
+    console.log('Handling execution response:', data);
+    if (data.status === 'input_required') {
+      setWaitingForInput(true);
+      setOutput(prevOutput => prevOutput + data.prompt);
+      outputRef.current?.focus();
+    } else if (data.status === 'output') {
+      setOutput(prevOutput => prevOutput + data.data);
+      setWaitingForInput(true);
+    } else if (data.status === 'completed') {
+      setOutput(data.output); // Set the complete output
+      setWaitingForInput(false);
+    } else {
+      setOutput(prevOutput => prevOutput + '\nUnexpected response from server');
     }
+  };
 
-    if (!language) {
-      setOutput('Unsupported language.');
-      return;
-    }
-  
-    if (!code || !code.trim()) {
-      setOutput('Empty code. Please enter some code before running.');
-      return;
-    }
-  
+  const handleRunCode = async () => {
     setIsRunning(true);
     setOutput('');
-  
+
     try {
       const languageId = getLanguageId(language);
-  
+
+      console.log('Sending request to backend...');
       const response = await axios.post(
         'http://localhost:5002/execute',
         {
@@ -133,31 +138,83 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, fileName, onUpdateCode, a
           language_id: languageId,
         },
         {
-          withCredentials: true, // Ensure credentials are sent
+          withCredentials: true,
         }
       );
-  
-      const result = response.data.results[0];
-      if (result.actualOutput) {
-        setOutput(result.actualOutput.trim());
-      } else if (result.errorOutput) {
-        setOutput(`Error: ${result.errorOutput.trim()}`);
-      } else if (result.compilationError) {
-        setOutput(`Compilation Error: ${result.compilationError.trim()}`);
-      } else {
-        setOutput('No output received from the server.');
-      }
+      console.log('Received response from backend:', response.data);
+
+      // Handle the response and update output
+      await handleExecutionResponse(response.data);
     } catch (error) {
+      console.error('Error communicating with backend:', error);
       setOutput(`Error: ${error.message || 'An unknown error occurred.'}`);
     } finally {
       setIsRunning(false);
     }
   };
-  
+
+  const handleInputSubmit = async () => {
+    if (!waitingForInput) return;
+    
+    setOutput(prevOutput => prevOutput + inputBuffer + '\n');
+    
+    try {
+      console.log('Sending input to backend:', inputBuffer);
+      const response = await axios.post(
+        'http://localhost:5002/provide-input',
+        { input: inputBuffer },
+        { withCredentials: true }
+      );
+      console.log('Received response from backend after input:', response.data);
+      
+      await handleExecutionResponse(response.data);
+    } catch (error) {
+      console.error('Error sending input to backend:', error);
+      setOutput(prevOutput => prevOutput + `\nError: ${error.message || 'An unknown error occurred.'}`);
+      setWaitingForInput(false);
+    }
+    
+    setInputBuffer('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLPreElement>) => {
+    if (waitingForInput) {
+      e.preventDefault();
+      if (e.key === 'Enter') {
+        handleInputSubmit();
+      } else if (e.key.length === 1) {
+        setInputBuffer(prev => prev + e.key);
+        setOutput(prev => prev + e.key);
+      } else if (e.key === 'Backspace') {
+        setInputBuffer(prev => prev.slice(0, -1));
+        setOutput(prev => prev.slice(0, -1));
+      }
+    }
+  };
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1>{fileName}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+        <h1 style={{ margin: 0, marginRight: '10px' }}>{fileName}</h1>
+        {!(fileName.endsWith('.css')) && (
+          <button
+            onClick={handleRunCode}
+            disabled={isRunning}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '20px',
+              color: isRunning ? '#999' : 'black',
+              padding: '5px 50px',
+              marginLeft: '300px'
+            }}
+            title={isRunning ? 'Running...' : 'Run Code'}
+          >
+            <FaPlay />
+          </button>
+        )}
+      </div>
       <div style={{ display: 'flex', gap: '20px' }}>
         <div style={{ width: '50%' }}>
           <Editor
@@ -166,25 +223,26 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, fileName, onUpdateCode, a
             theme="vs-dark"
             value={code}
             onChange={(value) => onUpdateCode(value || '')}
-            options={{ readOnly: false }} // Allow editing for all file types
+            options={{ readOnly: false }}
           />
-                  {!(fileName.endsWith('.css')) && (
-            <button onClick={handleRunCode} disabled={isRunning} style={{ marginTop: '10px' }}>
-              {isRunning ? 'Running...' : 'Run Code'}
-            </button>
-          )}
         </div>
         <div style={{ width: '50%' }}>
-          <pre style={{
-            backgroundColor: '#f0f0f0',
-            padding: '10px',
-            borderRadius: '5px',
-            height: '600px',
-            overflowY: 'auto',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word'
-          }}>
+          <pre
+            ref={outputRef}
+            style={{
+              backgroundColor: '#f0f0f0',
+              padding: '10px',
+              borderRadius: '5px',
+              height: '550px',
+              overflowY: 'auto',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word'
+            }}
+            onKeyDown={handleKeyPress}
+            tabIndex={0}
+          >
             {output}
+            {waitingForInput && <span style={{ backgroundColor: '#ddd' }}>{inputBuffer}</span>}
           </pre>
         </div>
       </div>

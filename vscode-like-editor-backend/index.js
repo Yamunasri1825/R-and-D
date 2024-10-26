@@ -1,5 +1,7 @@
 const express = require('express');
-const axios = require('axios');
+const { spawn } = require('child_process');
+const fs = require('fs').promises;
+const path = require('path');
 const cors = require('cors');
 
 const app = express();
@@ -18,54 +20,103 @@ app.use(cors(corsOptions));
 const JUDGE0_API_URL = 'https://judge0-ce.p.rapidapi.com/submissions';
 const JUDGE0_API_KEY = '4957ce6f54mshc63a46f01f2ec66p198804jsn8fedbc7a7b74'; // Replace with your actual API key
 
+let currentProcess;
+let dataBuffer = '';
+
 // Route to handle code execution via POST request
 app.post('/execute', async (req, res) => {
     const { source_code, language_id } = req.body;
+    
+    if (language_id === 62) { // Java
+        try {
+            // Write the Java code to a temporary file
+            await fs.writeFile('Main.java', source_code);
+            
+            // Compile the Java code
+            const compileProcess = spawn('javac', ['Main.java']);
+            
+            compileProcess.stderr.on('data', (data) => {
+                dataBuffer += data.toString();
+            });
+            
+            compileProcess.on('close', (code) => {
+                if (code !== 0) {
+                    res.json({ status: 'error', output: dataBuffer });
+                    dataBuffer = '';
+                    return;
+                }
+                
+                // Run the compiled Java program
+                currentProcess = spawn('java', ['Main']);
+                
+                currentProcess.stdout.on('data', (data) => {
+                    dataBuffer += data.toString();
+                    checkForInput(res);
+                });
+                
+                currentProcess.stderr.on('data', (data) => {
+                    dataBuffer += data.toString();
+                });
+                
+                currentProcess.on('close', (code) => {
+                    if (!res.headersSent) {
+                        res.json({ status: 'completed', output: dataBuffer });
+                    }
+                    dataBuffer = '';
+                });
+            });
+        } catch (error) {
+            res.json({ status: 'error', output: error.message });
+        }
+    } else {
+        // Handle other languages (e.g., Python) as before
+        currentProcess = spawn('python', ['-c', source_code]);
+        
+        dataBuffer = '';
 
-    if (typeof source_code !== 'string' || !source_code.trim()) {
-        return res.status(400).json({ error: { message: 'source_code must be a non-empty string.' } });
-    }
-
-    if (!language_id || typeof language_id !== 'number') {
-        return res.status(400).json({ error: { message: 'language_id must be provided as a number.' } });
-    }
-
-    try {
-        const submissionResponse = await axios.post(
-            `${JUDGE0_API_URL}?base64_encoded=false&wait=true`,
-            {
-                source_code: source_code,
-                language_id: language_id,
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-RapidAPI-Key': JUDGE0_API_KEY,
-                    'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
-                },
-            }
-        );
-
-        const { stdout, stderr, compile_output } = submissionResponse.data;
-
-        res.json({
-            results: [
-                {
-                    actualOutput: stdout || '',
-                    errorOutput: stderr || '',
-                    compilationError: compile_output || '',
-                },
-            ],
+        currentProcess.stdout.on('data', (data) => {
+            dataBuffer += data.toString();
+            checkForInput(res);
         });
-    } catch (error) {
-        res.status(500).json({
-            error: {
-                message: 'Error occurred while executing code.',
-                details: error.response?.data || error.message,
-            },
+
+        currentProcess.stderr.on('data', (data) => {
+            dataBuffer += data.toString();
+        });
+
+        currentProcess.on('close', (code) => {
+            if (!res.headersSent) {
+                res.json({ status: 'completed', output: dataBuffer });
+            }
+            dataBuffer = '';
         });
     }
 });
+
+// Route to handle input provision via POST request
+app.post('/provide-input', (req, res) => {
+  const { input } = req.body;
+  if (currentProcess && !currentProcess.killed) {
+    currentProcess.stdin.write(input + '\n');
+    
+    setTimeout(() => {
+      checkForInput(res);
+    }, 100);
+  } else {
+    res.status(400).json({ error: 'No active process' });
+  }
+});
+
+function checkForInput(res) {
+  if (res.headersSent) return;
+
+  if (dataBuffer.trim().endsWith(':')) {
+    res.json({ status: 'input_required', prompt: dataBuffer });
+    dataBuffer = '';
+  } else if (dataBuffer.includes('\n')) {
+    res.json({ status: 'output', data: dataBuffer });
+    dataBuffer = '';
+  }
+}
 
 // Start the server
 const PORT = 5002;
